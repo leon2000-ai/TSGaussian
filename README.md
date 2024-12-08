@@ -19,11 +19,11 @@
 - [Contact](#contact)
 
 ### Experimental materials
-![alt text](tu1.png)
+![alt text](figure1.png)
 ### 3D phenotyping pipeline
-![alt text](tu2.png)
+![alt text](figure2.png)
 ### Reconstruction and segmentation results
-![alt text](tu11_1.png)
+![alt text](figure3.png)
 
 ### Contact
 If you have any question or collaboration needs, please email liweifu@mail.hzau.edu.cn or yaohui.chen@mail.hzau.edu.cn.
