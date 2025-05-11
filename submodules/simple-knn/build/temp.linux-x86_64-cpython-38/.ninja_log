@@ -1,0 +1,7 @@
+# ninja log v5
+0	13484	1716864994857557005	/datashare/dir_zhaoliang0/gaussian-grouping/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/simple_knn.o	d641188380b3e486
+0	23768	1716865005125643786	/datashare/dir_zhaoliang0/gaussian-grouping/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/ext.o	965f4831305e84d7
+1	54683	1716865036053899299	/datashare/dir_zhaoliang0/gaussian-grouping/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/spatial.o	39d9c4b7a07d15bb
+1	14243	1720409245363261373	/datashare/dir_zhaoliang0/gaussian-grouping-3dmask2-rasterdepth-loss-hardsoftloss_0_Sparseloss_plant_yolo3/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/simple_knn.o	15bf77e394379f69
+0	23296	1720409254399085714	/datashare/dir_zhaoliang0/gaussian-grouping-3dmask2-rasterdepth-loss-hardsoftloss_0_Sparseloss_plant_yolo3/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/ext.o	135ac851c9459d47
+1	51774	1720409282890520845	/datashare/dir_zhaoliang0/gaussian-grouping-3dmask2-rasterdepth-loss-hardsoftloss_0_Sparseloss_plant_yolo3/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/spatial.o	214f261a07ecb476
