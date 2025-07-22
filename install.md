@@ -37,9 +37,3 @@ python -m pip install -e GroundingDINO
 cd ../..
 ```
 
-### **demo**
-```bash
-
-bash script/train.sh plant1 1 4,5,8
-
-```

@@ -13,7 +13,7 @@
 
 ☑ The code and data will be released after the paper's acceptance. Please stay tuned.
 
-☐   Build your own data set for training
+☐ Process your own data
 ## Table of Contents
 - [Consistent Targeted Semantic Segmentation](#consistent-targeted-semantic-segmentation)
 - [Semantic Constraints for 2D-to-3D](#semantic-constraints-for-2d-to-3d)
@@ -29,16 +29,14 @@
 
 ## Run the Demo
 
-### Download Demo Data
+You can download the demo data from [Google Drive](https://drive.google.com/drive/folders/1Vzec6A5ZkgyjzwoT7Ajqhy-vggTtzAK7?usp=drive_link).
 
-Please download the demo data and place it in the `data/` folder before running the demo.  
-You can download it from [Google Drive](https://drive.google.com/drive/folders/1Vzec6A5ZkgyjzwoT7Ajqhy-vggTtzAK7?usp=drive_link).
-
-To run the demo, use:
+After downloading, extract the data into the `data/` directory.
 
 ```bash
 bash script/train.sh plant1 1 4,5,8
 ```
+
 
 ### Contact
 If you have any question or collaboration needs, please email liweifu@mail.hzau.edu.cn.
