@@ -20,12 +20,14 @@
 - [Multi-Scale Depth Regularization](#multi-scale-depth-regularization)
 - [Contact](#contact)
 
+![alt text](Figure1.png)
+
 ### Consistent Targeted Semantic Segmentation
-![alt text](Figure_2.png)
+![alt text](Figure2.png)
 ### Semantic Constraints for 2D-to-3D
-![alt text](Figure_5.png)
+![alt text](Figure3.png)
 ### Multi-Scale Depth Regularization
-![alt text](Figure_3.png)
+![alt text](Figure4.png)
 
 ## Run the Demo
 
