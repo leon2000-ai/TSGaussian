@@ -47,7 +47,7 @@ class SceneInfo(NamedTuple):
     ply_path: str
 
 
-def topk_(matrix, K, axis=1): ### 这个函数的目的是从一个矩阵中找出每行或每列中最大的K个值，并返回这些值以及它们在原矩阵中的索引。
+def topk_(matrix, K, axis=1): #
     if axis == 0:
         row_index = np.arange(matrix.shape[1 - axis])
         topk_index = np.argpartition(-matrix, K, axis=axis)[0:K, :]
@@ -128,7 +128,7 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder):
 
         cam_info = CameraInfo(uid=image_path, R=R, T=T, FovY=FovY, FovX=FovX, image=image, depth_mono=depth_mono,
                               image_path=image_path, image_name=image_name, width=width, height=height)
-        cam_infos.append(cam_info) ### 加入单目估计深度数据
+        cam_infos.append(cam_info) #
     sys.stdout.write('\n')
     return cam_infos
 
@@ -157,7 +157,7 @@ def storePly(path, xyz, rgb):
     ply_data = PlyData([vertex_element])
     ply_data.write(path)
 
-def readColmapSceneInfo(path, images, dataset, eval, rand_pcd, mvs_pcd, llffhold=8, N_sparse=-1): ### rand_pcd True 调用points3D_random.ply，为随机点
+def readColmapSceneInfo(path, images, dataset, eval, rand_pcd, mvs_pcd, llffhold=8, N_sparse=-1): #
     try:
         cameras_extrinsic_file = os.path.join(path, "sparse/0", "images.bin")
         cameras_intrinsic_file = os.path.join(path, "sparse/0", "cameras.bin")
@@ -224,15 +224,15 @@ def readColmapSceneInfo(path, images, dataset, eval, rand_pcd, mvs_pcd, llffhold
         txt_path = os.path.join(path, "sparse/0/points3D.txt")
 
         try:
-            xyz, rgb, _ = read_points3D_binary(bin_path) ### 这里的bin文件是colmap输出的稀疏点云
+            xyz, rgb, _ = read_points3D_binary(bin_path) #
         except:
             xyz, rgb, _ = read_points3D_text(txt_path)
         print(xyz.max(0), xyz.min(0))
 
         if dataset == "LLFF":
-            pcd_shape = (topk_(xyz, 1, 0)[-1] + topk_(-xyz, 1, 0)[-1]) ### 获取稀疏点云范围，这行代码在计算点云 xyz 的包围盒尺寸，即在每个维度上从最小值到最大值的距离。
+            pcd_shape = (topk_(xyz, 1, 0)[-1] + topk_(-xyz, 1, 0)[-1]) #
             num_pts = int(pcd_shape.max() * 50)
-            xyz = np.random.random((num_pts, 3)) * pcd_shape * 1.3 - topk_(-xyz, 20, 0)[-1] ### 生成随机点,最大距离的50倍生成0-1内的随机点，然后根据范围进行转换。
+            xyz = np.random.random((num_pts, 3)) * pcd_shape * 1.3 - topk_(-xyz, 20, 0)[-1] #
         elif dataset == "DTU":
             pcd_shape = (topk_(xyz, 100, 0)[-1] + topk_(-xyz, 100, 0)[-1])
             num_pts = 10_00
@@ -240,7 +240,7 @@ def readColmapSceneInfo(path, images, dataset, eval, rand_pcd, mvs_pcd, llffhold
         print(pcd_shape)
         print(f"Generating random point cloud ({num_pts})...")
 
-        shs = np.random.random((num_pts, 3)) / 255.0 ### sh初始3维的颜色值
+        shs = np.random.random((num_pts, 3)) / 255.0 #
         pcd = BasicPointCloud(points=xyz, colors=SH2RGB(shs), normals=np.zeros((num_pts, 3)))
         storePly(ply_path, xyz, SH2RGB(shs) * 255)
     elif mvs_pcd:
@@ -268,7 +268,7 @@ def readColmapSceneInfo(path, images, dataset, eval, rand_pcd, mvs_pcd, llffhold
                            test_cameras=test_cam_infos,
                            eval_cameras=eval_cam_infos,
                            nerf_normalization=nerf_normalization,
-                           ply_path=ply_path) ### 将数据用函数储存起来
+                           ply_path=ply_path) #
     return scene_info
 
 def readCamerasFromTransforms(path, transformsfile, white_background, extension=".png"):
@@ -400,9 +400,9 @@ from utils import pose_utils
 def CreateLLFFSpiral(basedir):
 
     # Load poses and bounds.
-    poses_arr = np.load(os.path.join(basedir, 'poses_bounds.npy'))  ### n*17 包括3*5的相机姿态，两个景深范围值
-    poses_o = poses_arr[:, :-2].reshape([-1, 3, 5]) ### 前三列通常表示相机的旋转矩阵，用于描述相机面向的方向。第四列代表相机在三维空间中的位置。第五列可能包含一些额外的信息，如缩放因子或某种形式的参数，具体取决于应用场景和数据处理的需求。
-    bounds = poses_arr[:, -2:] ### 这两个值通常表示相机的景深范围，即场景中最近和最远的清晰可见距离。这在渲染和景深估计中非常重要。
+    poses_arr = np.load(os.path.join(basedir, 'poses_bounds.npy'))  #
+    poses_o = poses_arr[:, :-2].reshape([-1, 3, 5]) #
+    bounds = poses_arr[:, -2:] #
     
     # Pull out focal length before processing poses.
     # Correct rotation matrix ordering (and drop 5th column of poses).
@@ -497,9 +497,9 @@ def CreateDTUSpiral(basedir):
 
 
 sceneLoadTypeCallbacks = {
-    "Colmap": readColmapSceneInfo, ### 读取colmap 三维场景信息
-    "Blender" : readNerfSyntheticInfo, ### 读取NeRF 三维场景信息
+    "Colmap": readColmapSceneInfo, #
+    "Blender" : readNerfSyntheticInfo, #
     # "LLFF" : readLLFFInfo,
-    "Spiral" : CreateLLFFSpiral, ### 处理llff数据
+    "Spiral" : CreateLLFFSpiral, #
     "SpiralDTU" : CreateDTUSpiral,
 }

@@ -19,7 +19,7 @@ fi
 
 
 # Gaussian Grouping training
-python train.py    -s $dataset_folder -r ${scale}  -m output/${dataset_name} --config_file config/gaussian_dataset/train.json --value_to_mask ${value_to_mask} --use_wandb
+python train.py    -s $dataset_folder -r ${scale}  -m output/${dataset_name} --config_file config/gaussian_dataset/train.json --value_to_mask ${value_to_mask}
 
 # Segmentation rendering using trained model
 python render.py -m output/${dataset_name} --num_classes 256

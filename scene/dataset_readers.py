@@ -176,7 +176,7 @@ def readColmapSceneInfo(path, images, eval, object_path, llffhold=8, n_views=100
     random.seed(2024)
 
     n = len(cam_infos)
-    num_samples = 10
+    num_samples = 30
 
     indices = np.linspace(0, n - 1, num_samples, dtype=int)  
     cam_infos = [cam_infos[i] for i in indices]  

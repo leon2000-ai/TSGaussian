@@ -173,21 +173,21 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
 
         # -------------------------------------------------- DEPTH --------------------------------------------
         if iteration > opt.hard_depth_start:
-            render_pkg_for_depth = render_for_depth(viewpoint_cam, gaussians, pipe, background) ### 渲染深度，获取预测深度
+            render_pkg_for_depth = render_for_depth(viewpoint_cam, gaussians, pipe, background) #
             depth = render_pkg_for_depth["depth"]
             loss_hard = 0
             # Depth loss
             depth_mono = 255 - viewpoint_cam.depth_mono
             
-            ### 获取mask过后的深度图
+            #
             depth_mono[mask_1f.unsqueeze(0)] = 0
-            ###
+            #
             loss_l2_dpt = patch_norm_mse_loss(depth[None,...], depth_mono[None,...], randint(patch_range[0], patch_range[1]), opt.error_tolerance) ### 局部计算损失
-            loss_hard += 0.1 * loss_l2_dpt ### 计算dpt深度损失
+            loss_hard += 0.1 * loss_l2_dpt ### 
 
             
             if iteration > 3000:
-                loss_hard += 0.1 * loss_depth_smoothness(depth[None, ...], depth_mono[None, ...]) ### 迭代次数过高后进行平滑
+                loss_hard += 0.1 * loss_depth_smoothness(depth[None, ...], depth_mono[None, ...]) #
 
             loss_global = patch_norm_mse_loss_global(depth[None,...], depth_mono[None,...], randint(patch_range[0], patch_range[1]), opt.error_tolerance) ### 全局计算损失
             loss_hard += 0.4 * loss_global

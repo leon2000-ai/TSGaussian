@@ -143,7 +143,7 @@ def render_for_depth(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torc
     means3D = pc.get_xyz
     means2D = screenspace_points
     # opacity = pc.get_opacity
-    opacity = torch.ones(pc.get_xyz.shape[0], 1, device=pc.get_xyz.device) * 0.95 ### 冻结不透明度
+    opacity = torch.ones(pc.get_xyz.shape[0], 1, device=pc.get_xyz.device) * 0.95 #
 
     # If precomputed 3d covariance is provided, use it. If not, then it will be computed from
     # scaling / rotation by the rasterizer.
@@ -155,7 +155,7 @@ def render_for_depth(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torc
             cov3D_precomp = pc.get_covariance(scaling_modifier)
         else:
             scales = pc.get_scaling.detach()
-            rotations = pc.get_rotation.detach() ### 冻结缩放和旋转
+            rotations = pc.get_rotation.detach() #
 
         # If precomputed colors are provided, use them. Otherwise, if it is desired to precompute colors
         # from SHs in Python, do it. If not, then SH -> RGB conversion will be done by rasterizer.
@@ -221,7 +221,7 @@ def render_for_opa(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.
 
     rasterizer = GaussianRasterizer(raster_settings=raster_settings)
 
-    means3D = pc.get_xyz.detach() ### 冻结高斯中心
+    means3D = pc.get_xyz.detach() #
     means2D = screenspace_points
     opacity = pc.get_opacity
 
@@ -232,13 +232,13 @@ def render_for_opa(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.
         cov3D_precomp = pc.get_covariance(scaling_modifier)
     else:
         scales = pc.get_scaling.detach()
-        rotations = pc.get_rotation.detach() ### 冻结缩放和旋转
+        rotations = pc.get_rotation.detach() #
 
         # If precomputed colors are provided, use them. Otherwise, if it is desired to precompute colors
         # from SHs in Python, do it. If not, then SH -> RGB conversion will be done by rasterizer.
         sh_objs = pc.get_objects
         shs = None
-        colors_precomp = torch.ones_like(pc.get_xyz) ### 冻结颜色
+        colors_precomp = torch.ones_like(pc.get_xyz) #
 
     # Rasterize visible Gaussians to image, obtain their radii (on screen). 
     rendered_image, radii, rendered_objects, rendered_depth, rendered_alpha = rasterizer(
