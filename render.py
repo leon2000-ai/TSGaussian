@@ -1,10 +1,10 @@
-# Copyright (C) 2023, Gaussian-Grouping
-# Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+# Copyright (C) 2025, TSGaussian
+# TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
 # All rights reserved.
 #
 # ------------------------------------------------------------------------
-# Modified from codes in Gaussian-Splatting 
-# GRAPHDECO research group, https://team.inria.fr/graphdeco
+# Modified from codes in Gaussian-Grouping
+# Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
 
 import torch
 from scene import Scene
@@ -79,16 +79,19 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
     colormask_path = os.path.join(model_path, name, "ours_{}".format(iteration), "objects_feature16")
     gt_colormask_path = os.path.join(model_path, name, "ours_{}".format(iteration), "gt_objects_color")
     pred_obj_path = os.path.join(model_path, name, "ours_{}".format(iteration), "objects_pred")
+    depth_path = os.path.join(model_path, name, "ours_{}".format(iteration), "depth")
     makedirs(render_path, exist_ok=True)
     makedirs(gts_path, exist_ok=True)
     makedirs(colormask_path, exist_ok=True)
     makedirs(gt_colormask_path, exist_ok=True)
     makedirs(pred_obj_path, exist_ok=True)
+    makedirs(depth_path, exist_ok=True)
 
     for idx, view in enumerate(tqdm(views, desc="Rendering progress")):
         results = render(view, gaussians, pipeline, background)
         rendering = results["render"]
         rendering_obj = results["render_object"]
+        depth = results["depth"]
         
         logits = classifier(rendering_obj)
         pred_obj = torch.argmax(logits,dim=0)
@@ -105,6 +108,7 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
         gt = view.original_image[0:3, :, :]
         torchvision.utils.save_image(rendering, os.path.join(render_path, '{0:05d}'.format(idx) + ".png"))
         torchvision.utils.save_image(gt, os.path.join(gts_path, '{0:05d}'.format(idx) + ".png"))
+        torchvision.utils.save_image(depth, os.path.join(depth_path, '{0:05d}'.format(idx) + ".png"))
 
     out_path = os.path.join(render_path[:-8],'concat')
     makedirs(out_path,exist_ok=True)

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2023, Gaussian-Grouping
- * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+ * Copyright (C) 2025, TSGaussian 
+ * TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
  * All rights reserved.
  * ------------------------------------------------------------------------
- * Modified from codes in Gaussian-Splatting 
- * GRAPHDECO research group, https://team.inria.fr/graphdeco
+ * Modified from codes in Gaussian-Grouping 
+ * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
  */
 
 #include "rasterizer_impl.h"
@@ -216,6 +216,8 @@ int CudaRasterizer::Rasterizer::forward(
 	const bool prefiltered,
 	float* out_color,
 	float* out_objects,
+	float* out_depth,
+	float* out_alpha,
 	int* radii,
 	bool debug)
 {
@@ -328,12 +330,15 @@ int CudaRasterizer::Rasterizer::forward(
 		geomState.means2D,
 		feature_ptr,
 		sh_objs,
+		geomState.depths,
 		geomState.conic_opacity,
+		out_alpha,
 		imgState.accum_alpha,
 		imgState.n_contrib,
 		background,
 		out_color,
-		out_objects), debug)
+		out_objects,
+		out_depth), debug)
 
 	return num_rendered;
 }
@@ -348,6 +353,7 @@ void CudaRasterizer::Rasterizer::backward(
 	const float* shs,
 	const float* sh_objs,
 	const float* colors_precomp,
+	const float* alphas,
 	const float* scales,
 	const float scale_modifier,
 	const float* rotations,
@@ -362,6 +368,8 @@ void CudaRasterizer::Rasterizer::backward(
 	char* img_buffer,
 	const float* dL_dpix,
 	const float* dL_dpix_obj,
+	const float* dL_ddepths,
+	const float* dL_dalphas,
 	float* dL_dmean2D,
 	float* dL_dconic,
 	float* dL_dopacity,
@@ -394,6 +402,7 @@ void CudaRasterizer::Rasterizer::backward(
 	// If we were given precomputed colors and not SHs, use them.
 	const float* color_ptr = (colors_precomp != nullptr) ? colors_precomp : geomState.rgb;
 	const float* obj_ptr = sh_objs;
+	const float* depth_ptr = geomState.depths;
 	CHECK_CUDA(BACKWARD::render(
 		tile_grid,
 		block,
@@ -405,10 +414,14 @@ void CudaRasterizer::Rasterizer::backward(
 		geomState.conic_opacity,
 		color_ptr,
 		obj_ptr,
+		depth_ptr,
+		alphas,
 		imgState.accum_alpha,
 		imgState.n_contrib,
 		dL_dpix,
 		dL_dpix_obj,
+		dL_ddepths,
+		dL_dalphas,
 		(float3*)dL_dmean2D,
 		(float4*)dL_dconic,
 		dL_dopacity,

@@ -1,16 +1,19 @@
-# Copyright (C) 2023, Gaussian-Grouping
-# Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+# Copyright (C) 2025, TSGaussian
+# TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
 # All rights reserved.
 #
 # ------------------------------------------------------------------------
-# Modified from codes in Gaussian-Splatting 
-# GRAPHDECO research group, https://team.inria.fr/graphdeco
+# Modified from codes in Gaussian-Grouping
+# Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
 
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from math import exp
 from scipy.spatial import cKDTree
+
+###
+import math
 
 def l1_loss(network_output, gt):
     return torch.abs((network_output - gt)).mean()
@@ -114,6 +117,82 @@ def loss_cls_3d(features, predictions, k=5, lambda_val=2.0, max_points=200000, s
 
     return lambda_val * normalized_loss
 
+### 加入深度损失
+def normalize(input, mean=None, std=None):
+    input_mean = torch.mean(input, dim=1, keepdim=True) if mean is None else mean
+    input_std = torch.std(input, dim=1, keepdim=True) if std is None else std
+    return (input - input_mean) / (input_std + 1e-2*torch.std(input.reshape(-1)))
 
+def patchify(input, patch_size):
+    patches = F.unfold(input, kernel_size=patch_size, stride=patch_size).permute(0,2,1).view(-1, 1*patch_size*patch_size)
+    return patches
 
+def margin_l2_loss(network_output, gt, margin, return_mask=False):
+    mask = (network_output - gt).abs() > margin
+    if not return_mask:
+        return ((network_output - gt)[mask] ** 2).mean()
+    else:
+        return ((network_output - gt)[mask] ** 2).mean(), mask
 
+def loss_depth_smoothness(depth, img):
+    img_grad_x = img[:, :, :, :-1] - img[:, :, :, 1:]
+    img_grad_y = img[:, :, :-1, :] - img[:, :, 1:, :]
+    weight_x = torch.exp(-torch.abs(img_grad_x).mean(1).unsqueeze(1))
+    weight_y = torch.exp(-torch.abs(img_grad_y).mean(1).unsqueeze(1))
+
+    loss = (((depth[:, :, :, :-1] - depth[:, :, :, 1:]).abs() * weight_x).sum() +
+            ((depth[:, :, :-1, :] - depth[:, :, 1:, :]).abs() * weight_y).sum()) / \
+           (weight_x.sum() + weight_y.sum())
+    return loss
+
+def patch_norm_mse_loss(input, target, patch_size, margin, return_mask=False):
+    input_patches = normalize(patchify(input, patch_size))
+    target_patches = normalize(patchify(target, patch_size))
+    return margin_l2_loss(input_patches, target_patches, margin, return_mask)
+
+def patch_norm_mse_loss_global(input, target, patch_size, margin, return_mask=False):
+    input_patches = normalize(patchify(input, patch_size), std = input.std().detach())
+    target_patches = normalize(patchify(target, patch_size), std = target.std().detach())
+    return margin_l2_loss(input_patches, target_patches, margin, return_mask)
+
+def pearson_depth_loss(depth_src, depth_target):
+    #co = pearson(depth_src.reshape(-1), depth_target.reshape(-1))
+
+    src = depth_src - depth_src.mean()
+    target = depth_target - depth_target.mean()
+
+    src = src / (src.std() + 1e-6)
+    target = target / (target.std() + 1e-6)
+
+    co = (src * target).mean()
+    assert not torch.any(torch.isnan(co))
+    return 1 - co
+
+def pearson_depth_loss_0(depth_src, depth_target):
+
+    src = normalize(depth_src)
+    target = normalize(depth_target)
+    co = (src * target).mean()
+    assert not torch.any(torch.isnan(co))
+    return 1 - co
+
+def local_pearson_loss(depth_src, depth_target, patch_size):
+
+    input_patches = normalize(patchify(depth_src, patch_size))
+    target_patches = normalize(patchify(depth_target, patch_size))
+    loss = pearson_depth_loss_0(input_patches, target_patches)
+    # Randomly select patch, top left corner of the patch (x_0,y_0) has to be 0 <= x_0 <= max_h, 0 <= y_0 <= max_w
+    # num_box_h = math.floor(depth_src.shape[0]/box_p)
+    # num_box_w = math.floor(depth_src.shape[1]/box_p)
+    # max_h = depth_src.shape[0] - box_p
+    # max_w = depth_src.shape[1] - box_p
+    # _loss = torch.tensor(0.0,device='cuda')
+    # n_corr = int(p_corr * num_box_h * num_box_w)
+    # x_0 = torch.randint(0, max_h, size=(n_corr,), device = 'cuda')
+    # y_0 = torch.randint(0, max_w, size=(n_corr,), device = 'cuda')
+    # x_1 = x_0 + box_p
+    # y_1 = y_0 + box_p
+    # _loss = torch.tensor(0.0,device='cuda')
+    # for i in range(len(x_0)):
+    #     _loss += pearson_depth_loss_0(depth_src[x_0[i]:x_1[i],y_0[i]:y_1[i]].reshape(-1), depth_target[x_0[i]:x_1[i],y_0[i]:y_1[i]].reshape(-1))
+    return loss

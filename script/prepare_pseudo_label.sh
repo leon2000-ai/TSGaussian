@@ -2,7 +2,7 @@
 
 
 # Check if the user provided an argument
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 3 ]; then
     echo "Usage: $0 <dataset_name>"
     exit 1
 fi
@@ -11,6 +11,7 @@ fi
 dataset_name="$1"
 scale="$2"
 dataset_folder="data/$dataset_name"
+detections_path="$3"
 
 if [ ! -d "$dataset_folder" ]; then
     echo "Error: Folder '$dataset_folder' does not exist."
@@ -38,6 +39,7 @@ python demo/demo_automatic.py \
   --output "./example/output_gaussian_dataset/${dataset_name}" \
   --suppress_small_objects  \
   --SAM_PRED_IOU_THRESHOLD 0.7 \
+  --detections_path "${detections_path}" \
 
 
 mv ./example/output_gaussian_dataset/${dataset_name}/Annotations ./example/output_gaussian_dataset/${dataset_name}/Annotations_color
@@ -53,6 +55,7 @@ python demo/demo_automatic.py \
   --use_short_id  \
   --suppress_small_objects  \
   --SAM_PRED_IOU_THRESHOLD 0.7 \
+  --detections_path "${detections_path}" \
   
 # 2. copy gray mask to the correponding data path
 cp -r ./example/output_gaussian_dataset/${dataset_name}/Annotations ../data/${dataset_name}/object_mask

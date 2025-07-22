@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2023, Gaussian-Grouping
- * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+ * Copyright (C) 2025, TSGaussian 
+ * TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
  * All rights reserved.
  * ------------------------------------------------------------------------
- * Modified from codes in Gaussian-Splatting 
- * GRAPHDECO research group, https://team.inria.fr/graphdeco
+ * Modified from codes in Gaussian-Grouping 
+ * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
  */
 
 #ifndef CUDA_RASTERIZER_BACKWARD_H_INCLUDED
@@ -28,10 +28,14 @@ namespace BACKWARD
 		const float4* conic_opacity,
 		const float* colors,
 		const float* objects,
+		const float* depths,
+		const float* alphas,
 		const float* final_Ts,
 		const uint32_t* n_contrib,
 		const float* dL_dpixels,
 		const float* dL_dpixels_objs,
+		const float* dL_ddepths,
+		const float* dL_dalphas,
 		float3* dL_dmean2D,
 		float4* dL_dconic2D,
 		float* dL_dopacity,

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2023, Gaussian-Grouping
- * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+ * Copyright (C) 2025, TSGaussian 
+ * TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
  * All rights reserved.
  * ------------------------------------------------------------------------
- * Modified from codes in Gaussian-Splatting 
- * GRAPHDECO research group, https://team.inria.fr/graphdeco
+ * Modified from codes in Gaussian-Grouping 
+ * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
  */
 
 #include "forward.h"
@@ -266,12 +266,15 @@ renderCUDA(
 	const float2* __restrict__ points_xy_image,
 	const float* __restrict__ features,
 	const float* __restrict__ obj_features,
+	const float* __restrict__ depths,
 	const float4* __restrict__ conic_opacity,
+	float* __restrict__ out_alpha,
 	float* __restrict__ final_T,
 	uint32_t* __restrict__ n_contrib,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
-	float* __restrict__ out_objects)
+	float* __restrict__ out_objects,
+	float* __restrict__ out_depth)
 {
 	// Identify current tile and associated min/max pixel range.
 	auto block = cg::this_thread_block();
@@ -303,6 +306,7 @@ renderCUDA(
 	uint32_t last_contributor = 0;
 	float C[CHANNELS] = { 0 };
 	float O[OBJECTS] = { 0 };	//rendered object
+	float D = 0; //后面深度要用
 
 	// Iterate over batches until all done or range is complete
 	for (int i = 0; i < rounds; i++, toDo -= BLOCK_SIZE)
@@ -357,6 +361,7 @@ renderCUDA(
 				C[ch] += features[collected_id[j] * CHANNELS + ch] * alpha * T;}
 			for (int ch = 0; ch < OBJECTS; ch++){
 				O[ch] += obj_features[collected_id[j] * OBJECTS + ch] * alpha * T;}
+			D += depths[collected_id[j]] * alpha * T;
 
 			T = test_T;
 
@@ -376,6 +381,8 @@ renderCUDA(
 			out_color[ch * H * W + pix_id] = C[ch] + T * bg_color[ch];}
 		for (int ch = 0; ch < OBJECTS; ch++){
 			out_objects[ch * H * W + pix_id] = O[ch];}
+		out_alpha[pix_id] = 1 - T;
+		out_depth[pix_id] = D;
 		
 	}
 }
@@ -388,12 +395,15 @@ void FORWARD::render(
 	const float2* means2D,
 	const float* colors,
 	const float* objects,
+	const float* depths,
 	const float4* conic_opacity,
+	float* out_alpha,
 	float* final_T,
 	uint32_t* n_contrib,
 	const float* bg_color,
 	float* out_color,
-	float* out_objects)
+	float* out_objects,
+	float* out_depth)
 {
 	renderCUDA<NUM_CHANNELS, NUM_OBJECTS> << <grid, block >> > (
 		ranges,
@@ -402,12 +412,15 @@ void FORWARD::render(
 		means2D,
 		colors,
 		objects,
+		depths,
 		conic_opacity,
+		out_alpha,
 		final_T,
 		n_contrib,
 		bg_color,
 		out_color,
-		out_objects);
+		out_objects,
+		out_depth);
 }
 
 void FORWARD::preprocess(int P, int D, int M,

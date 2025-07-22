@@ -1,10 +1,10 @@
-# Copyright (C) 2023, Gaussian-Grouping
-# Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+# Copyright (C) 2025, TSGaussian
+# TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
 # All rights reserved.
 #
 # ------------------------------------------------------------------------
-# Modified from codes in Gaussian-Splatting 
-# GRAPHDECO research group, https://team.inria.fr/graphdeco
+# Modified from codes in Gaussian-Grouping
+# Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
 
 import torch
 import numpy as np
@@ -239,7 +239,6 @@ class GaussianModel:
         self._scaling = nn.Parameter(set_requires_grad(scaling_sub, False))
         self._rotation = nn.Parameter(set_requires_grad(rotation_sub, False))
         self._objects_dc = nn.Parameter(set_requires_grad(objects_dc_sub, False))
-
 
     def inpaint_setup(self, training_args, mask3d):
 
@@ -492,7 +491,6 @@ class GaussianModel:
 
         self.denom = self.denom[valid_points_mask]
         self.max_radii2D = self.max_radii2D[valid_points_mask]
-
     def cat_tensors_to_optimizer(self, tensors_dict):
         optimizable_tensors = {}
         for group in self.optimizer.param_groups:
@@ -537,7 +535,7 @@ class GaussianModel:
         self.denom = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
         self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device="cuda")
 
-    def densify_and_split(self, grads, grad_threshold, scene_extent, N=2):
+    def densify_and_split(self, grads, grad_threshold, scene_extent, classifier_model, iteration, value_to_mask, N=2):
         n_init_points = self.get_xyz.shape[0]
         # Extract points that satisfy the gradient condition
         padded_grad = torch.zeros((n_init_points), device="cuda")
@@ -545,6 +543,10 @@ class GaussianModel:
         selected_pts_mask = torch.where(padded_grad >= grad_threshold, True, False)
         selected_pts_mask = torch.logical_and(selected_pts_mask,
                                               torch.max(self.get_scaling, dim=1).values > self.percent_dense*scene_extent)
+        
+        if iteration >= 3000:
+            selected_pts_semantic_mask = ~self.get_semantic_bg_mask(classifier_model, value_to_mask)
+            selected_pts_mask =  selected_pts_mask & selected_pts_semantic_mask
 
         stds = self.get_scaling[selected_pts_mask].repeat(N,1)
         means =torch.zeros((stds.size(0), 3),device="cuda")
@@ -563,12 +565,15 @@ class GaussianModel:
         prune_filter = torch.cat((selected_pts_mask, torch.zeros(N * selected_pts_mask.sum(), device="cuda", dtype=bool)))
         self.prune_points(prune_filter)
 
-    def densify_and_clone(self, grads, grad_threshold, scene_extent):
+    def densify_and_clone(self, grads, grad_threshold, scene_extent, classifier_model, iteration, value_to_mask):
         # Extract points that satisfy the gradient condition
         selected_pts_mask = torch.where(torch.norm(grads, dim=-1) >= grad_threshold, True, False)
         selected_pts_mask = torch.logical_and(selected_pts_mask,
                                               torch.max(self.get_scaling, dim=1).values <= self.percent_dense*scene_extent)
-        
+        if iteration >= 3000:
+            selected_pts_semantic_mask = ~self.get_semantic_bg_mask(classifier_model, value_to_mask)
+            selected_pts_mask =  selected_pts_mask & selected_pts_semantic_mask
+
         new_xyz = self._xyz[selected_pts_mask]
         new_features_dc = self._features_dc[selected_pts_mask]
         new_features_rest = self._features_rest[selected_pts_mask]
@@ -579,12 +584,53 @@ class GaussianModel:
 
         self.densification_postfix(new_xyz, new_features_dc, new_features_rest, new_opacities, new_scaling, new_rotation, new_objects_dc)
 
-    def densify_and_prune(self, max_grad, min_opacity, extent, max_screen_size):
+    ### rebg 根据mask移除背景
+    # def removal_mask(self, mask3d):
+    #     mask3d = mask3d.squeeze()
+
+    #     # Extracting subsets using the mask
+    #     xyz_sub = self._xyz[mask3d].detach()
+    #     features_dc_sub = self._features_dc[mask3d].detach()
+    #     features_rest_sub = self._features_rest[mask3d].detach()
+    #     opacity_sub = self._opacity[mask3d].detach()
+    #     scaling_sub = self._scaling[mask3d].detach()
+    #     rotation_sub = self._rotation[mask3d].detach()
+    #     objects_dc_sub = self._objects_dc[mask3d].detach()
+
+    #     self.xyz_gradient_accum = self.xyz_gradient_accum[mask3d]
+    #     self.denom = self.denom[mask3d]
+    #     self.max_radii2D = self.max_radii2D[mask3d]
+    #     def set_requires_grad(tensor, requires_grad):
+    #         """Returns a new tensor with the specified requires_grad setting."""
+    #         return tensor.detach().clone().requires_grad_(requires_grad)
+
+    #     # Construct nn.Parameters with specified gradients
+    #     self._xyz = nn.Parameter(set_requires_grad(xyz_sub, False))
+    #     self._features_dc = nn.Parameter(set_requires_grad(features_dc_sub, False))
+    #     self._features_rest = nn.Parameter(set_requires_grad(features_rest_sub, False))
+    #     self._opacity = nn.Parameter(set_requires_grad(opacity_sub, False))
+    #     self._scaling = nn.Parameter(set_requires_grad(scaling_sub, False))
+    #     self._rotation = nn.Parameter(set_requires_grad(rotation_sub, False))
+    #     self._objects_dc = nn.Parameter(set_requires_grad(objects_dc_sub, False))
+
+    def get_semantic_bg_mask(self, classifier_model, value_to_mask):
+        classifier_model.eval()
+        with torch.no_grad():
+            logits3d = classifier_model(self._objects_dc.permute(2,0,1))
+            prob_obj3d_3dmask = torch.softmax(logits3d,dim=0)
+        mask = torch.zeros_like(prob_obj3d_3dmask[0, :, :]).bool()
+        for index in value_to_mask:
+            mask |= (prob_obj3d_3dmask[index, :, :] > 0.3)
+        ################################################
+        torch.cuda.empty_cache()
+        return ~mask.squeeze() ### bg的mask
+
+    def densify_and_prune(self, max_grad, min_opacity, extent, max_screen_size, classifier_model, iterations, value_to_mask):
         grads = self.xyz_gradient_accum / self.denom
         grads[grads.isnan()] = 0.0
 
-        self.densify_and_clone(grads, max_grad, extent)
-        self.densify_and_split(grads, max_grad, extent)
+        self.densify_and_clone(grads, max_grad, extent, classifier_model, iterations, value_to_mask)
+        self.densify_and_split(grads, max_grad, extent, classifier_model, iterations, value_to_mask)
 
         prune_mask = (self.get_opacity < min_opacity).squeeze()
         if max_screen_size:
@@ -594,6 +640,14 @@ class GaussianModel:
         self.prune_points(prune_mask)
 
         torch.cuda.empty_cache()
+    
+    def semantic_mask_and_prune(self, classifier_model, value_to_mask):
+        bg_mask = self.get_semantic_bg_mask(classifier_model, value_to_mask)
+        fg_mask = ~bg_mask
+        self.prune_points(bg_mask) ### 过滤掉bg点
+        torch.cuda.empty_cache()
+
+        return fg_mask
 
     def add_densification_stats(self, viewspace_point_tensor, update_filter):
         self.xyz_gradient_accum[update_filter] += torch.norm(viewspace_point_tensor.grad[update_filter,:2], dim=-1, keepdim=True)

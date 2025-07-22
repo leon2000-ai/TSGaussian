@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2023, Gaussian-Grouping
- * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+ * Copyright (C) 2025, TSGaussian 
+ * TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
  * All rights reserved.
  * ------------------------------------------------------------------------
- * Modified from codes in Gaussian-Splatting 
- * GRAPHDECO research group, https://team.inria.fr/graphdeco
+ * Modified from codes in Gaussian-Grouping 
+ * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
  */
 
 #ifndef CUDA_RASTERIZER_H_INCLUDED
@@ -49,6 +49,8 @@ namespace CudaRasterizer
 			const bool prefiltered,
 			float* out_color,
 			float* out_objects,
+			float* out_depth,
+			float* out_alpha,
 			int* radii = nullptr,
 			bool debug = false);
 
@@ -60,6 +62,7 @@ namespace CudaRasterizer
 			const float* shs,
 			const float* sh_objs,
 			const float* colors_precomp,
+			const float* alphas,
 			const float* scales,
 			const float scale_modifier,
 			const float* rotations,
@@ -74,6 +77,8 @@ namespace CudaRasterizer
 			char* image_buffer,
 			const float* dL_dpix,
 			const float* dL_dpix_obj,
+			const float* dL_ddepths,
+			const float* dL_dalphas,
 			float* dL_dmean2D,
 			float* dL_dconic,
 			float* dL_dopacity,

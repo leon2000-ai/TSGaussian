@@ -1,10 +1,10 @@
-# Copyright (C) 2023, Gaussian-Grouping
-# Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+# Copyright (C) 2025, TSGaussian
+# TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
 # All rights reserved.
 #
 # ------------------------------------------------------------------------
-# Modified from codes in Gaussian-Splatting 
-# GRAPHDECO research group, https://team.inria.fr/graphdeco
+# Modified from codes in Gaussian-Grouping
+# Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
 
 from setuptools import setup
 from torch.utils.cpp_extension import CUDAExtension, BuildExtension

@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2023, Gaussian-Grouping
- * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
+ * Copyright (C) 2025, TSGaussian 
+ * TSGaussian research group, https://github.com/leon2000-ai/TSGaussian
  * All rights reserved.
  * ------------------------------------------------------------------------
- * Modified from codes in Gaussian-Splatting 
- * GRAPHDECO research group, https://team.inria.fr/graphdeco
+ * Modified from codes in Gaussian-Grouping 
+ * Gaussian-Grouping research group, https://github.com/lkeab/gaussian-grouping
  */
 
 #ifndef CUDA_RASTERIZER_FORWARD_H_INCLUDED
@@ -55,12 +55,15 @@ namespace FORWARD
 		const float2* points_xy_image,
 		const float* features,
 		const float* obj_features,
+		const float* depths,
 		const float4* conic_opacity,
+		float* out_alpha,
 		float* final_T,
 		uint32_t* n_contrib,
 		const float* bg_color,
 		float* out_color,
-		float* out_objects);
+		float* out_objects,
+		float* out_depth);
 }
 
 
