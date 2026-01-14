@@ -1,7 +1,7 @@
 ## 📖 TSGaussian: Semantic and Depth-Guided Target-Specific Gaussian Splatting from Sparse Views
 
 🔥 2D detection, semantic segmentation, and 3D reconstruction of specific target objects;⭐ Separation of reconstructed 3D objects based on their semantic identities, enabling distinct handling of different semantic components; 🔥 High-quality 3D reconstruction and rendering in sparse-view scenarios without compromising reconstruction quality.
-> Paper(https://www.sciencedirect.com/science/article/pii/S026288562500294X)
+> Paper([TSGaussian](https://www.sciencedirect.com/science/article/pii/S026288562500294X))
 
 > Liang Zhao, Zehan Bao, Yi Xie, Hong Chen, Yaohui Chen, Weifu Li
 
